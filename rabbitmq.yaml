@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: rabbitmq
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - image: rabbitmq:3-management
+        name: rabbitmq
+        ports:
+        - containerPort: 15672
+      # - image: kbudde/rabbitmq-exporter
+      #   name: rabbitmq-exporter
+      #   ports:
+      #   - containerPort: 9419
+      # - name: prometheus-to-sd
+      #   image: gcr.io/google-containers/prometheus-to-sd:v0.5.0
+      #   command:
+      #     - /monitor
+      #     - --source=:http://localhost:9419/metrics
+      #     - --stackdriver-prefix=custom.googleapis.com
+      #     - --pod-id=$(POD_ID)
+      #     - --namespace-id=$(POD_NAMESPACE)
+      #   env:
+      #     - name: POD_ID
+      #       valueFrom:
+      #         fieldRef:
+      #           apiVersion: v1
+      #           fieldPath: metadata.uid
+      #     - name: POD_NAMESPACE
+      #       valueFrom:
+      #         fieldRef:
+      #           fieldPath: metadata.namespace
+      - name: perf-test
+        image: pivotalrabbitmq/perf-test:latest
+        args: ["-x","1","-y","2","-u","throughput-test-1","-a","--id","test1"]
+#---
+#apiVersion: autoscaling/v2
+#kind: HorizontalPodAutoscaler
+#metadata:
+#  name: rabbitmq
+#  namespace: default
+#spec:
+#  scaleTargetRef:
+#    apiVersion: apps/v1
+#    kind: Deployment
+#    name: rabbitmq
+#  minReplicas: 1
+#  maxReplicas: 5
+#  metrics:
+#  - type: Pods
+#    pods:
+#      metric:
+#        #name: prometheus.googleapis.com|rabbitmq_queue_message_bytes_unacknowledged|gauge
+#        name: prometheus.googleapis.com|rabbitmq_connections|gauge
+#      target:
+#        type: AverageValue
+#        averageValue: 3

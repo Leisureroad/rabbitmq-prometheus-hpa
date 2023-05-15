@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-final
+  name: nginx-final
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-final
+  template:
+    metadata:
+      labels:
+        app: nginx-final
+    spec:
+      containers:
+      - image: nginx
+        name: nginx-final
+      - image: kbudde/rabbitmq-exporter
+        name: rabbitmq-exporter
+        env:
+          - name: RABBIT_URL
+            value: http://rabbitmq-mgmt.default.svc.cluster.local:15672
+      - name: prometheus-to-sd
+        image: gcr.io/google-containers/prometheus-to-sd:v0.5.0
+        command:
+         - /monitor
+         - --source=:http://localhost:9419/metrics
+         - --stackdriver-prefix=custom.googleapis.com
+         - --pod-id=$(POD_ID)
+         - --namespace-id=$(POD_NAMESPACE)
+        env:
+          - name: POD_ID
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.uid
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+#---
+#apiVersion: autoscaling/v2
+#kind: HorizontalPodAutoscaler
+#metadata:
+#  name: nginx
+#  namespace: default
+#spec:
+#  scaleTargetRef:
+#    apiVersion: apps/v1
+#    kind: Deployment
+#    name: nginx
+#  minReplicas: 1
+#  maxReplicas: 5
+#  metrics:
+#  - type: Pods
+#    pods:
+#      metric:
+#        #name: prometheus.googleapis.com|rabbitmq_queue_message_bytes_unacknowledged|gauge
+#        name: prometheus.googleapis.com|rabbitmq_connections|gauge
+#      target:
+#        type: AverageValue
+#        averageValue: 2

@@ -1,0 +1,22 @@
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+ name: nginx-final
+ namespace: default
+spec:
+ scaleTargetRef:
+   apiVersion: apps/v1
+   kind: Deployment
+   name: nginx-final
+ minReplicas: 1
+ maxReplicas: 3
+ metrics:
+ - type: Pods
+   pods:
+     metric:
+       #name: prometheus.googleapis.com|rabbitmq_queue_message_bytes_unacknowledged|gauge
+       name: prometheus.googleapis.com|rabbitmq_connections|gauge
+     target:
+       type: AverageValue
+       averageValue: 2

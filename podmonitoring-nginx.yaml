@@ -1,0 +1,11 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: prom-example-nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx-final
+  endpoints:
+  - port: 9419
+    interval: 30s
